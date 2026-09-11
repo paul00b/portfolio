@@ -15,6 +15,64 @@ npm run dev
 
 Puis `npm run build` pour produire `dist/`.
 
+## Déploiement (CasaOS + tunnel Cloudflare)
+
+Le site tourne dans un conteneur nginx, et le tunnel Cloudflare existant vient le
+chercher sur un port local. Sur le serveur :
+
+```bash
+git clone https://github.com/paul00b/portfolio.git
+cd portfolio
+docker compose up -d --build
+```
+
+Le conteneur écoute sur `8088` côté hôte (`PORTFOLIO_PORT=9000 docker compose up -d`
+pour en changer). Vérification avant de toucher au tunnel :
+
+```bash
+curl -I http://localhost:8088/          # 200, Cache-Control: no-cache
+curl    http://localhost:8088/healthz   # ok
+```
+
+Puis la route, dans le `config.yml` de cloudflared :
+
+```yaml
+ingress:
+  # … les routes existantes …
+
+  - hostname: portfolio.paulbr.fr
+    service: http://localhost:8088
+
+  # cette règle attrape-tout doit rester la toute dernière du fichier :
+  # cloudflared lit les règles dans l'ordre et s'arrête à la première qui
+  # correspond, donc une route ajoutée en dessous ne serait jamais atteinte.
+  - service: http_status:404
+```
+
+`http://localhost:8088` suppose que cloudflared tourne sur l'hôte (service systemd)
+ou en `network_mode: host`. S'il tourne dans un conteneur sur un réseau bridge,
+`localhost` désigne le conteneur lui-même et pas le serveur : brancher alors les
+deux conteneurs sur le même réseau Docker et viser `http://portfolio:80`.
+
+Le DNS, une seule fois — la commande crée le CNAME `portfolio` vers
+`<ID-DU-TUNNEL>.cfargotunnel.com` :
+
+```bash
+cloudflared tunnel route dns <nom-du-tunnel> portfolio.paulbr.fr
+```
+
+Puis recharger cloudflared (`systemctl restart cloudflared`, ou
+`docker restart cloudflared`).
+
+Aucune règle de réécriture n'est nécessaire nulle part, et c'est le point : le mode
+vit dans le hash (`/#jeu`, `/#cv`), or un hash n'est jamais transmis au serveur.
+Toutes les URL partageables arrivent comme un simple `GET /`. Avec de vraies routes
+`/jeu` et `/cv`, il aurait fallu un fallback SPA dans nginx.
+
+Pour mettre à jour : `git pull && docker compose up -d --build`. L'`index.html` est
+servi en `no-cache`, donc la nouvelle version part chez les visiteurs déjà venus dès
+le rechargement ; seul `images/` est mis en cache long.
+
 ## Liens de partage
 
 Le mode est dans l'URL : le lien affiché dans la barre d'adresse est toujours celui à partager.

@@ -34,7 +34,12 @@ curl -I http://localhost:8088/          # 200, Cache-Control: no-cache
 curl    http://localhost:8088/healthz   # ok
 ```
 
-Puis la route, dans le `config.yml` de cloudflared :
+Puis la route, dans le `config.yml` de cloudflared. **Sauvegarder le fichier
+avant de l'éditer** — une erreur ici coupe tout le tunnel, pas seulement ce site :
+
+```bash
+sudo cp /etc/cloudflared/config.yml /etc/cloudflared/config.yml.bak
+```
 
 ```yaml
 ingress:
@@ -43,11 +48,26 @@ ingress:
   - hostname: portfolio.paulbr.fr
     service: http://localhost:8088
 
-  # cette règle attrape-tout doit rester la toute dernière du fichier :
-  # cloudflared lit les règles dans l'ordre et s'arrête à la première qui
-  # correspond, donc une route ajoutée en dessous ne serait jamais atteinte.
+  # Cette règle attrape-tout DOIT rester la toute dernière du fichier.
+  # cloudflared refuse de démarrer si la dernière règle porte un hostname :
+  # c'est une validation bloquante, pas une convention. Une route collée en
+  # dessous ne casse donc pas que le portfolio — elle empêche le service de
+  # redémarrer et met hors ligne toutes les autres routes du tunnel.
   - service: http_status:404
 ```
+
+Valider **avant** de redémarrer quoi que ce soit :
+
+```bash
+cloudflared tunnel ingress validate                       # la config est-elle acceptée
+cloudflared tunnel ingress rule https://portfolio.paulbr.fr   # quelle règle capte l'URL
+```
+
+Un redémarrage sans cette validation est le bon moyen de perdre l'accès à tout
+ce qui passe par le tunnel. Si ça arrive quand même : la machine reste joignable
+sur le réseau local (`http://<ip-locale>`), Cloudflare n'est pas dans la boucle
+en LAN — restaurer le `.bak`, relancer, puis débugger à froid avec
+`journalctl -u cloudflared -n 50`.
 
 `http://localhost:8088` suppose que cloudflared tourne sur l'hôte (service systemd)
 ou en `network_mode: host`. S'il tourne dans un conteneur sur un réseau bridge,
@@ -61,8 +81,11 @@ Le DNS, une seule fois — la commande crée le CNAME `portfolio` vers
 cloudflared tunnel route dns <nom-du-tunnel> portfolio.paulbr.fr
 ```
 
-Puis recharger cloudflared (`systemctl restart cloudflared`, ou
-`docker restart cloudflared`).
+Puis, une fois `ingress validate` passé, recharger cloudflared
+(`systemctl restart cloudflared`, ou `docker restart cloudflared`) et vérifier
+qu'il est bien remonté : `systemctl status cloudflared`. Une erreur 1033 côté
+Cloudflare signifie qu'aucun tunnel n'est connecté — donc que cloudflared n'a
+pas redémarré.
 
 Aucune règle de réécriture n'est nécessaire nulle part, et c'est le point : le mode
 vit dans le hash (`/#jeu`, `/#cv`), or un hash n'est jamais transmis au serveur.

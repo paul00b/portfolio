@@ -251,7 +251,7 @@ export function ContactModal({ onClose }: { onClose: () => void }) {
             → <span className="text-mustard">{t(profile.status)}</span>
           </div>
           <div>
-            → timezone <span className="text-mustard">Europe/Paris</span> · {t({ fr: "café", en: "coffee" })} <span className="text-mustard">{t({ fr: "oui", en: "yes" })}</span>
+            → timezone <span className="text-mustard">Europe/Paris</span> · {t(ui.coffee)} <span className="text-mustard">{t(ui.yes)}</span>
           </div>
         </div>
       </div>

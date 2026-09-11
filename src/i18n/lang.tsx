@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { onRouteChange, readRoute, updateRoute } from "../lib/route";
 
 export type Lang = "fr" | "en";
 
@@ -21,7 +22,10 @@ const LangCtx = createContext<LangValue>({
   tl: (v) => v.fr,
 });
 
-function readStored(): Lang {
+function readInitial(): Lang {
+  // A link that carries a language (`/#cv/en`) wins over this browser's history.
+  const fromUrl = readRoute().lang;
+  if (fromUrl) return fromUrl;
   try {
     const v = localStorage.getItem("pb-lang");
     if (v === "fr" || v === "en") return v;
@@ -32,10 +36,13 @@ function readStored(): Lang {
 }
 
 export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(readStored);
+  const [lang, setLangState] = useState<Lang>(readInitial);
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
+    // Only an explicit choice is pinned to the URL, so the short `/#jeu` and
+    // `/#cv` links stay short until a language is actually picked.
+    updateRoute({ lang: l });
     try {
       localStorage.setItem("pb-lang", l);
     } catch {
@@ -46,6 +53,16 @@ export function LangProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
+
+  // Back / forward button, or a link pasted mid-visit.
+  useEffect(
+    () =>
+      onRouteChange(() => {
+        const { lang: next } = readRoute();
+        if (next) setLangState(next);
+      }),
+    [],
+  );
 
   const value = useMemo<LangValue>(
     () => ({ lang, setLang, t: (v) => v[lang], tl: (v) => v[lang] }),

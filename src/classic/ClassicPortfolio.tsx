@@ -137,7 +137,7 @@ export function ClassicPortfolio({ onSwitchToGame }: { onSwitchToGame: () => voi
             </div>
             <div className="mt-10 flex flex-wrap gap-6 font-mono text-xs text-ink-soft">
               <div>
-                <div className="text-2xl font-bold text-ink">{profile.years}{t({ fr: " ans", en: "y" })}</div>
+                <div className="text-2xl font-bold text-ink">{profile.years}{t(ui.yearsShort)}</div>
                 {t(ui.statYears)}
               </div>
               <div>
@@ -166,7 +166,7 @@ export function ClassicPortfolio({ onSwitchToGame }: { onSwitchToGame: () => voi
                 <div>role: "{t(profile.title)}"</div>
                 <div>at: "{profile.company}"</div>
                 <div>
-                  xp: {profile.years} <span className="text-mustard">// {t({ fr: "et ça continue", en: "and counting" })}</span>
+                  xp: {profile.years} <span className="text-mustard">// {t(ui.andCounting)}</span>
                 </div>
               </div>
               <div className="absolute -right-3 -top-4 rounded-full border-2 border-ink bg-mustard px-3 py-1 font-mono text-xs font-bold shadow-hard-sm sm:-right-6">LVL {profile.years}</div>

@@ -15,6 +15,54 @@ npm run dev
 
 Puis `npm run build` pour produire `dist/`.
 
+## Liens de partage
+
+Le mode est dans l'URL : le lien affiché dans la barre d'adresse est toujours celui à partager.
+
+| Lien | Ouvre |
+|---|---|
+| `/` | le mode jeu (défaut) |
+| `/#jeu` | **le jeu isométrique** |
+| `/#cv` | **le portfolio classique** |
+| `/#jeu/en` · `/#cv/en` | le même, en anglais |
+| `/#jeu/fr` · `/#cv/fr` | le même, forcé en français |
+
+Un lien partagé passe devant ce que le visiteur avait choisi la dernière fois. Sans segment de
+langue, on garde la détection habituelle (navigateur, puis `localStorage`) — la langue ne
+s'ajoute à l'URL qu'une fois le bouton FR/EN utilisé, pour que `/#jeu` et `/#cv` restent courts.
+
+Les alias `#game`, `#play`, `#classic`, `#classique`, `#regular`, `#portfolio` sont acceptés et
+réécrits vers la forme canonique, dans n'importe quel ordre (`#en/cv` → `#cv/en`). Basculer de
+mode ajoute une entrée d'historique : le bouton retour du navigateur annule le changement.
+
+C'est un hash et pas un vrai chemin parce que le build est un `index.html` unique — ça marche
+sur n'importe quel hébergeur statique sans une seule règle de redirection, et même en `file://`.
+
+## Modifier les textes
+
+Aucune chaîne visible n'est écrite dans les composants : tout est dans `src/data/`, en FR et EN
+côte à côte. Pour changer un texte, il n'y a qu'un seul endroit à ouvrir.
+
+| Fichier | Ce qu'on y modifie |
+|---|---|
+| `src/data/projects.ts` | `projects` — les 7 projets : titre, pitch, description, contributions, apprentissage, réplique du perso, tags, chiffres clés |
+| | `profile` — nom, poste, email, LinkedIn, bio, compétences, outils, parcours, formation, loisirs, hauts faits |
+| | `stationCopy` — le label et la réplique des 3 stations qui ne sont pas des projets (départ, à propos, contact) |
+| `src/data/ui.ts` | toutes les chaînes de l'interface : boutons, titres de section, libellés, légendes |
+
+```ts
+// src/data/ui.ts — chaque entrée est une paire FR / EN
+seeWork: { fr: "Voir les projets ↓", en: "See the work ↓" },
+```
+
+Deux règles pour ne rien casser :
+
+- **toujours remplir `fr` *et* `en`.** `ui.ts` est typé `satisfies Record<string, Loc>` : oublier
+  une langue fait échouer `npx tsc --noEmit`.
+- **ajouter un projet = ajouter un objet à `projects`.** Les stations de l'île, la minimap, les
+  modales et le mode classique en dérivent tous — il n'y a rien d'autre à toucher, sauf
+  `position: [x, z]` pour le placer sur la carte (anneau de rayon ~13).
+
 ## Ce qu'il y a dedans
 
 | | |
@@ -42,6 +90,7 @@ src/
 │   ├── Landmarks.tsx     les 9 bâtiments low-poly
 │   ├── Player.tsx        personnage, caméra, collisions, bulle de dialogue
 │   └── stations.ts       position des pavillons (anneau à 40°)
+├── lib/route.ts          mode + langue dans l'URL (liens partageables)
 ├── classic/              le portfolio qui scrolle
 └── ui/                   modales + covers de projets
 ```

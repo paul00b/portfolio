@@ -117,6 +117,10 @@ export const ui = {
     en: "A question, feedback on this portfolio, or just a coffee around Paris — my inbox is open.",
   },
   switchToGame: { fr: "↳ passer en mode jeu", en: "↳ switch to game mode" },
+  andCounting: { fr: "et ça continue", en: "and counting" },
+  yearsShort: { fr: " ans", en: "y" },
+  coffee: { fr: "café", en: "coffee" },
+  yes: { fr: "oui", en: "yes" },
   builtWith: {
     fr: "conçu et codé avec React, Three.js et beaucoup trop de café.",
     en: "designed and coded with React, Three.js and far too much coffee.",

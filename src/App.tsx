@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GameScene } from "./game/GameScene";
 import { ClassicPortfolio } from "./classic/ClassicPortfolio";
 import { profile } from "./data/projects";
 import { ui } from "./data/ui";
 import { LangProvider, LangToggle, useT } from "./i18n/lang";
-
-type Mode = "game" | "regular";
+import { onRouteChange, readRoute, updateRoute, type Mode } from "./lib/route";
 
 function TopControls({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void }) {
   const { t } = useT();
@@ -92,12 +91,29 @@ function Intro({ onStart, onRegular }: { onStart: () => void; onRegular: () => v
 }
 
 function Portfolio() {
-  const [mode, setMode] = useState<Mode>(() => (localStorage.getItem("pb-mode") as Mode) || "game");
+  // A shared link wins over whatever this browser last visited.
+  const [mode, setMode] = useState<Mode>(
+    () => readRoute().mode ?? ((localStorage.getItem("pb-mode") as Mode) || "game"),
+  );
   const [started, setStarted] = useState(() => localStorage.getItem("pb-started") === "1");
+  const firstSync = useRef(true);
 
+  // Keep the address bar in sync, so the URL on screen is always the one to share.
   useEffect(() => {
     localStorage.setItem("pb-mode", mode);
+    updateRoute({ mode }, { replace: firstSync.current });
+    firstSync.current = false;
   }, [mode]);
+
+  // Back / forward button, or a link pasted mid-visit.
+  useEffect(
+    () =>
+      onRouteChange(() => {
+        const { mode: next } = readRoute();
+        if (next) setMode(next);
+      }),
+    [],
+  );
 
   const start = () => {
     setStarted(true);

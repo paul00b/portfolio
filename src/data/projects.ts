@@ -560,7 +560,31 @@ export const profile = {
   ],
 };
 
-export const homeQuote: Loc = {
-  fr: "Salut ! Moi c'est Paul, Founding Designer chez Primary. Promène-toi sur l'île pour découvrir mes projets — je te raconte chacun d'eux au passage.",
-  en: "Hey! I'm Paul, Founding Designer at Primary. Walk around the island to discover my projects — I'll tell you about each one on the way.",
+/**
+ * The three stations of the island that are not projects. Their pin label and
+ * what the character says when you walk up to them — `stations.ts` only holds
+ * where they sit on the map.
+ */
+export const stationCopy = {
+  home: {
+    label: { fr: "Départ", en: "Start" } as Loc,
+    quote: {
+      fr: "Salut ! Moi c'est Paul, Founding Designer chez Primary. Promène-toi sur l'île pour découvrir mes projets — je te raconte chacun d'eux au passage.",
+      en: "Hey! I'm Paul, Founding Designer at Primary. Walk around the island to discover my projects — I'll tell you about each one on the way.",
+    } as Loc,
+  },
+  about: {
+    label: { fr: "Qui je suis", en: "About me" } as Loc,
+    quote: {
+      fr: "Ça, c'est chez moi — enfin, une version low-poly. Psycho cognitive, STAPS, un bootcamp Rails : appuie sur E pour le parcours complet.",
+      en: "That's my place — well, a low-poly version of it. Cognitive psychology, sport science, a Rails bootcamp: press E for the whole story.",
+    } as Loc,
+  },
+  contact: {
+    label: { fr: "Contact", en: "Contact" } as Loc,
+    quote: {
+      fr: "Une question, un projet, ou juste envie d'échanger ? Glisse une lettre dans la boîte (E). Je réponds vite, promis.",
+      en: "A question, a project, or just want to talk? Drop a letter in the mailbox (E). I answer fast, promise.",
+    } as Loc,
+  },
 };

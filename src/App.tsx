@@ -5,6 +5,7 @@ import { profile } from "./data/projects";
 import { ui } from "./data/ui";
 import { LangProvider, LangToggle, useT } from "./i18n/lang";
 import { onRouteChange, readRoute, updateRoute, type Mode } from "./lib/route";
+import { readStored, writeStored } from "./lib/storage";
 
 function TopControls({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void }) {
   const { t } = useT();
@@ -93,14 +94,14 @@ function Intro({ onStart, onRegular }: { onStart: () => void; onRegular: () => v
 function Portfolio() {
   // A shared link wins over whatever this browser last visited.
   const [mode, setMode] = useState<Mode>(
-    () => readRoute().mode ?? ((localStorage.getItem("pb-mode") as Mode) || "game"),
+    () => readRoute().mode ?? ((readStored("pb-mode") as Mode) || "game"),
   );
-  const [started, setStarted] = useState(() => localStorage.getItem("pb-started") === "1");
+  const [started, setStarted] = useState(() => readStored("pb-started") === "1");
   const firstSync = useRef(true);
 
   // Keep the address bar in sync, so the URL on screen is always the one to share.
   useEffect(() => {
-    localStorage.setItem("pb-mode", mode);
+    writeStored("pb-mode", mode);
     updateRoute({ mode }, { replace: firstSync.current });
     firstSync.current = false;
   }, [mode]);
@@ -117,7 +118,7 @@ function Portfolio() {
 
   const start = () => {
     setStarted(true);
-    localStorage.setItem("pb-started", "1");
+    writeStored("pb-started", "1");
   };
   const goRegular = () => {
     setMode("regular");

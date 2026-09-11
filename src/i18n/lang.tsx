@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { onRouteChange, readRoute, updateRoute } from "../lib/route";
+import { readStored, writeStored } from "../lib/storage";
 
 export type Lang = "fr" | "en";
 
@@ -26,13 +27,9 @@ function readInitial(): Lang {
   // A link that carries a language (`/#cv/en`) wins over this browser's history.
   const fromUrl = readRoute().lang;
   if (fromUrl) return fromUrl;
-  try {
-    const v = localStorage.getItem("pb-lang");
-    if (v === "fr" || v === "en") return v;
-    return navigator.language?.toLowerCase().startsWith("en") ? "en" : "fr";
-  } catch {
-    return "fr";
-  }
+  const stored = readStored("pb-lang");
+  if (stored === "fr" || stored === "en") return stored;
+  return navigator.language?.toLowerCase().startsWith("en") ? "en" : "fr";
 }
 
 export function LangProvider({ children }: { children: ReactNode }) {
@@ -43,11 +40,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
     // Only an explicit choice is pinned to the URL, so the short `/#jeu` and
     // `/#cv` links stay short until a language is actually picked.
     updateRoute({ lang: l });
-    try {
-      localStorage.setItem("pb-lang", l);
-    } catch {
-      /* private mode — the toggle still works for this session */
-    }
+    writeStored("pb-lang", l);
   }, []);
 
   useEffect(() => {

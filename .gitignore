@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+dist-ssr/
+
+# local tooling
+.claude/
+tools/lowpoly-avatar/lowpoly
+*.dSYM/
+
+# source portrait for the avatar generator — kept local, not published
+public/images/paul-photo.jpg
+
+# editors
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# logs
+npm-debug.log*
+yarn-error.log*
+*.local

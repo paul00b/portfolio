@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-cream: #f7f2e8;
+  --color-cream-dark: #efe7d8;
+  --color-ink: #1f2233;
+  --color-ink-soft: #4a4f66;
+  --color-coral: #ff6b5b;
+  --color-coral-dark: #e4503f;
+  --color-mint: #7fd8be;
+  --color-mint-dark: #3fb994;
+  --color-lavender: #b9a7ff;
+  --color-mustard: #f5c451;
+  --color-sky: #8fc7ff;
+  --color-navy: #232946;
+
+  /* Primary's brand accents, used by the two Primary case studies */
+  --color-prune: #4a2545;
+  --color-prune-soft: #8e3f7a;
+  --color-jonquille: #f5c451;
+
+  --shadow-hard: 4px 4px 0 0 #1f2233;
+  --shadow-hard-sm: 2px 2px 0 0 #1f2233;
+  --shadow-soft: 0 18px 40px -18px rgba(31, 34, 51, 0.35);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-cream text-ink font-sans antialiased;
+  overscroll-behavior: none;
+}
+
+::selection {
+  background: #ff6b5b;
+  color: #fff;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.6) translateY(10px);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.05) translateY(-2px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes rise {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes bounceKey {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+@keyframes spinSlow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-float {
+  animation: float 3.5s ease-in-out infinite;
+}
+.animate-pop {
+  animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.animate-blink {
+  animation: blink 1s steps(2, start) infinite;
+}
+.animate-rise {
+  animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-key {
+  animation: bounceKey 1.2s ease-in-out infinite;
+}
+.animate-spin-slow {
+  animation: spinSlow 14s linear infinite;
+}
+
+/* Keycap look */
+.kbd {
+  @apply font-mono inline-flex items-center justify-center rounded-md border-2 border-ink bg-white text-ink text-[11px] font-bold leading-none px-1.5 h-6 min-w-6;
+  box-shadow: 0 2px 0 0 #1f2233;
+}
+.kbd-lg {
+  @apply font-mono inline-flex items-center justify-center rounded-lg border-2 border-ink bg-white text-ink text-xs font-bold leading-none px-2 h-8 min-w-8;
+  box-shadow: 0 3px 0 0 #1f2233;
+}
+
+/* Dotted grid background used in regular mode */
+.bg-grid {
+  background-image: radial-gradient(rgba(31, 34, 51, 0.12) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}

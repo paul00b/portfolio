@@ -139,28 +139,32 @@ export const fx = {
 };
 
 const dummy = new THREE.Object3D();
+const hidden = new THREE.Matrix4().makeScale(0, 0, 0);
 
 function PoolMesh({ pool, geometry, material }: { pool: Pool; geometry: THREE.BufferGeometry; material: THREE.Material }) {
   const ref = useRef<THREE.InstancedMesh>(null);
+  const shown = useMemo(() => new Uint8Array(pool.cap).fill(1), [pool]);
   useFrame(({ clock }, dt) => {
     const mesh = ref.current;
     if (!mesh) return;
     const d = Math.min(dt, 0.05);
     const t = clock.elapsedTime;
+    let dirty = false;
     for (let i = 0; i < pool.cap; i++) {
       const p = pool.items[i];
+      if (p.alive && p.age + d >= p.life) p.alive = false;
       if (!p.alive) {
-        dummy.scale.setScalar(0);
-        dummy.position.set(0, -999, 0);
-        dummy.updateMatrix();
-        mesh.setMatrixAt(i, dummy.matrix);
+        // hide once, then skip: idle slots cost nothing
+        if (shown[i]) {
+          shown[i] = 0;
+          mesh.setMatrixAt(i, hidden);
+          dirty = true;
+        }
         continue;
       }
       p.age += d;
-      if (p.age >= p.life) {
-        p.alive = false;
-        continue;
-      }
+      shown[i] = 1;
+      dirty = true;
       const k = Math.exp(-p.drag * d);
       p.vx *= k;
       p.vz *= k;
@@ -182,6 +186,7 @@ function PoolMesh({ pool, geometry, material }: { pool: Pool; geometry: THREE.Bu
       mesh.setMatrixAt(i, dummy.matrix);
       mesh.setColorAt(i, p.color);
     }
+    if (!dirty) return;
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   });

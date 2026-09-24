@@ -1,6 +1,6 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrthographicCamera, PerformanceMonitor } from "@react-three/drei";
+import { OrthographicCamera, PerformanceMonitor, Preload } from "@react-three/drei";
 import { Bloom, EffectComposer, SMAA, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { World } from "./World";
@@ -199,7 +199,7 @@ export function GameScene() {
   const visitedRef = useRef(visited);
   const [ready, setReady] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
-  const [hq, setHq] = useState(true);
+  const [dpr, setDpr] = useState(1.5);
   const [toast, setToast] = useState<{ id: number; label: string; color: string; all: boolean } | null>(null);
   const [xpPulse, setXpPulse] = useState(0);
   const posRef = useRef({ x: 0, z: 3, angle: 0 });
@@ -264,7 +264,7 @@ export function GameScene() {
       <Loader hidden={ready} />
       <Canvas
         shadows="soft"
-        dpr={hq ? [1, 1.75] : [0.8, 1.25]}
+        dpr={dpr}
         gl={{ antialias: false, powerPreference: "high-performance", stencil: false }}
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.NeutralToneMapping;
@@ -272,7 +272,8 @@ export function GameScene() {
           setTimeout(() => setReady(true), 500);
         }}
       >
-        <PerformanceMonitor onDecline={() => setHq(false)} flipflops={2} onFallback={() => setHq(false)} />
+        {/* Only the resolution adapts, and only downwards: toggling effects would recompile every shader mid-game. */}
+        {ready && <PerformanceMonitor ms={500} iterations={8} onDecline={() => setDpr((d) => Math.max(1, d - 0.25))} />}
         <OrthographicCamera makeDefault position={[18, 18, 18]} zoom={30} near={-60} far={220} />
         <ambientLight intensity={0.55} color="#eaf1ff" />
         <hemisphereLight args={["#cfe8ff", "#9bd48d", 0.9]} />
@@ -281,16 +282,13 @@ export function GameScene() {
         <Suspense fallback={null}>
           <World nearId={near?.id ?? null} lang={lang} visited={visited} />
           <Player enabled={enabled} onNearChange={handleNear} posRef={posRef} near={near} lang={lang} />
+          <Preload all />
         </Suspense>
-        {hq ? (
-          <EffectComposer multisampling={0}>
-            <SMAA />
-            <Bloom mipmapBlur intensity={0.55} luminanceThreshold={0.92} luminanceSmoothing={0.2} radius={0.6} />
-            <Vignette offset={0.32} darkness={0.42} eskil={false} />
-          </EffectComposer>
-        ) : (
-          <></>
-        )}
+        <EffectComposer multisampling={0}>
+          <SMAA />
+          <Bloom mipmapBlur intensity={0.55} luminanceThreshold={0.92} luminanceSmoothing={0.2} radius={0.6} />
+          <Vignette offset={0.32} darkness={0.42} eskil={false} />
+        </EffectComposer>
       </Canvas>
 
       {/* ---------- HUD ---------- */}

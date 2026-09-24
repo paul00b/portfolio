@@ -23,7 +23,7 @@ function TopControls({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => vo
           onClick={() => onChange("game")}
           className={`relative z-10 flex h-9 w-[86px] items-center justify-center gap-1.5 rounded-xl transition-colors ${mode === "game" ? "text-white" : "text-ink-soft hover:text-ink"}`}
         >
-          🕹️ {t(ui.modeGame)}
+           {t(ui.modeGame)}
         </button>
         <button
           role="tab"
@@ -31,7 +31,7 @@ function TopControls({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => vo
           onClick={() => onChange("regular")}
           className={`relative z-10 flex h-9 w-[86px] items-center justify-center gap-1.5 rounded-xl transition-colors ${mode === "regular" ? "text-white" : "text-ink-soft hover:text-ink"}`}
         >
-          📄 {t(ui.modeRegular)}
+           {t(ui.modeRegular)}
         </button>
       </div>
     </div>

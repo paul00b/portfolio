@@ -89,7 +89,7 @@ export const ui = {
   heroTitleC: { fr: ".", en: "." },
 
   seeWork: { fr: "Voir les projets ↓", en: "See the work ↓" },
-  playPortfolio: { fr: "🕹️ Jouer le portfolio", en: "🕹️ Play the portfolio" },
+  playPortfolio: { fr: "Jouer le portfolio", en: "Play the portfolio" },
 
   statYears: { fr: "d'expérience", en: "of experience" },
   statProjects: { fr: "projets", en: "projects" },

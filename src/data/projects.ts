@@ -46,38 +46,38 @@ export const projects: Project[] = [
     role: { fr: "Founding Designer", en: "Founding Designer" },
     period: same("2025 — 2026"),
     tagline: {
-      fr: "Un premier niveau de réponse santé fiable, dans la messagerie que les patients utilisent déjà.",
-      en: "A first level of reliable health answers, inside the messaging patients already use.",
+      fr: "AMIA prend le relais du médecin quand il n'est pas là, pour une santé proactive et non curative",
+      en: "AMIA steps in for the doctor when they're not around, for proactive rather than reactive care.",
     },
     description: {
-      fr: "AMIA est l'assistant conversationnel santé de Primary. L'enjeu : donner au patient une première réponse fiable et immédiate sur sa santé ou son parcours de soin, puis l'orienter vers le bon niveau de prise en charge. Le choix structurant a été de l'embarquer dans le flux de messagerie existant plutôt que d'ouvrir un chat autonome — on s'appuie sur une habitude déjà là au lieu d'en créer une nouvelle. Et le médecin ou l'assistant médical valide la réponse en un clic : l'humain reste dans la boucle, toujours.",
-      en: "AMIA is Primary's conversational health assistant. The goal: give patients an immediate, reliable first answer about their health or their care pathway, then route them to the right level of care. The structural decision was to ship it inside the existing messaging flow rather than open a standalone chat — riding a habit that already exists instead of teaching a new one. The doctor or medical assistant validates every answer in one click: a human stays in the loop, always.",
+      fr: "AMIA, c'est l'assistant conversationnel santé de Primary. L'enjeu : donner au patient une première réponse fiable et immédiate sur sa santé ou son parcours de soin, puis l'orienter vers le bon niveau de prise en charge. AMIA est présente à plusieurs endroits clef, pour permettre à l'utilisateur une expérience de soin qualitative et continue. Elle ne remplace pas le médecin ou l'assistant médical : l'humain reste dans la boucle, toujours.",
+      en: "AMIA is Primary's conversational health assistant. The goal: give patients an immediate, reliable first answer about their health or their care pathway, then route them to the right level of care. AMIA shows up at several key touchpoints, giving patients a consistent, high-quality care experience. She doesn't replace the doctor or medical assistant: a human stays in the loop, always.",
     },
     contribution: {
       fr: [
         "Cadrage produit et parcours patient / soignant, du premier atelier à la mise en production",
         "Écriture des 5 principes de design IA de Primary : explicabilité, contrôle, transparence, intégration, échec gracieux",
-        "Intégration dans la messagerie existante plutôt qu'un chat autonome — zéro friction d'adoption",
+        "Création de l'IA, design conversationnel d'AMIA : comment doit-elle se comporter ?",
         "Boucle de validation humaine : la conversation ne remonte dans la console qu'une fois la synthèse générée",
         "Bêta encadrée par un protocole écrit de supervision humaine, dans trois cabinets",
-        "Tests utilisateurs modérés et synthèse de recherche (mars 2026)",
+        "Tests utilisateurs et synthèse de recherche, puis itérations constantes",
       ],
       en: [
         "Product framing and patient / clinician journeys, from the first workshop to production",
         "Wrote Primary's 5 AI design principles: explicability, control, transparency, integration, graceful failure",
-        "Shipped inside the existing messaging flow rather than a standalone chat — zero adoption friction",
+        "Designing the AI itself — AMIA's conversational design: how should she behave?",
         "Human validation loop: a conversation only reaches the console once a synthesis is generated",
         "Beta framed by a written human-supervision protocol, across three practices",
-        "Moderated user tests and research synthesis (March 2026)",
+        "User testing and research synthesis, then constant iteration",
       ],
     },
     learning: {
-      fr: "La confiance ne vient pas de la performance du modèle, mais de son appartenance : « c'est l'IA de mon médecin ». Et le vrai point de blocage n'est pas ce que l'IA répond — c'est ce qu'elle partage avec le médecin.",
+      fr: "La confiance ne vient pas de la performance du modèle, mais de son appartenance : « c'est l'IA de mon médecin ». Et le vrai point de blocage n'est pas ce que l'IA répond - c'est ce qu'elle partage avec le médecin.",
       en: "Trust didn't come from the model's capability but from who it belongs to: \"it's my doctor's AI\". And the real blocker was never what the AI answers — it's what it shares with the doctor.",
     },
     quote: {
-      fr: "Celui-là, c'est mon projet phare. Une IA dans un cabinet médical, c'est 10 % de modèle et 90 % de confiance. Appuie sur E.",
-      en: "This one's my flagship. AI in a doctor's practice is 10% model and 90% trust. Press E.",
+      fr: "Mon projet phare ! Une IA dans un cabinet médical, intégrée, aidante. C'est 10 % de modèle et 90 % de confiance. Appuie sur E.",
+      en: "My flagship project! An AI in a doctor's practice, integrated, helpful. It's 10% model and 90% trust. Press E.",
     },
     tags: {
       fr: ["Design conversationnel", "IA", "Santé", "Recherche utilisateur"],
@@ -106,7 +106,7 @@ export const projects: Project[] = [
       en: "Building the design function of a health startup, solo, from nothing.",
     },
     description: {
-      fr: "Primary reconstruit la médecine générale autour de l'expérience patient, avec un cap à 1000 cabinets. J'y suis le premier et seul designer : je porte la vision design, le design system et la pratique quotidienne des équipes. La ligne directrice que j'ai posée tient en trois mots — Haute Technologie. Haute Humanité. Haute Confiance. Chaque décision se juge sur deux critères : la confiance, et la qualité de la communication médecin-patient.",
+      fr: "Primary reconstruit la médecine générale autour de l'expérience patient, avec un cap à 1000 cabinets. Premier designer, je porte la vision design, le design system et la pratique quotidienne des équipes. La ligne directrice que j'ai posée tient en trois mots — Haute Technologie. Haute Humanité. Haute Confiance. Chaque décision se juge sur deux critères : la confiance, et la qualité de la communication médecin-patient.",
       en: "Primary is rebuilding general medicine around patient experience, aiming at 1000 practices. I'm its first and only designer: I own the design vision, the design system, and the day-to-day practice of the teams. The north star I set holds in three words — High Technology. High Humanity. High Trust. Every decision is judged on two things: trust, and the quality of doctor–patient communication.",
     },
     contribution: {
@@ -415,7 +415,7 @@ export const profile = {
   name: "Paul Broussolle",
   title: { fr: "Founding Designer", en: "Founding Designer" } as Loc,
   company: "Primary",
-  location: { fr: "Gennevilliers · Paris", en: "Gennevilliers · Paris" } as Loc,
+  location: { fr: "Paris", en: "Paris" } as Loc,
   years: 9,
   email: "broussolle.paul@gmail.com",
   linkedin: "https://www.linkedin.com/in/paul-broussolle/",
@@ -427,13 +427,13 @@ export const profile = {
   } as Loc,
 
   northStar: {
-    fr: "Haute Technologie. Haute Humanité. Haute Confiance.",
-    en: "High Technology. High Humanity. High Trust.",
+    fr: "Apprendre, tester, partager",
+    en: "Learn, test, share",
   } as Loc,
 
   intro: {
-    fr: "Founding Designer chez Primary, où je reconstruis l'expérience de la médecine générale. Je conçois des produits de santé où la confiance compte plus que la performance — et je les code de plus en plus moi-même. Deux choses me font avancer : les nouveaux défis, et transmettre.",
-    en: "Founding Designer at Primary, where I'm rebuilding the experience of general medicine. I design health products where trust matters more than capability — and I increasingly ship the code myself. Two things keep me going: new challenges, and passing on what I know.",
+    fr: "Founding Designer avec 9 ans d'EXP, passionné de Product Design (oui oui, j'en fait même pour le plaisir). Ancien dev front, très à l'aise avec L'IA, j'adore résoudre des problèmes complexe, et monter des structures design solide.",
+    en: "Founding Designer with 9 years of experience, passionate about Product Design (yes, I even do it for fun). Former front-end dev, very comfortable with AI, I love solving complex problems and building solid design structures.",
   } as Loc,
 
   bio: {
@@ -462,7 +462,7 @@ export const profile = {
 
   timeline: [
     {
-      period: { fr: "2025 — aujourd'hui", en: "2025 — now" },
+      period: { fr: "2025 - aujourd'hui", en: "2025 — now" },
       title: { fr: "Founding Designer", en: "Founding Designer" },
       company: "Primary",
       where: { fr: "Paris · santé", en: "Paris · healthcare" },
@@ -538,7 +538,7 @@ export const profile = {
       icon: "🧵",
       label: { fr: "Maroquinerie", en: "Leatherwork" } as Loc,
       detail: {
-        fr: "Vous ne l'aviez pas vu venir, avouez ! Pochettes d'ordinateur, portefeuilles — c'est très relaxant.",
+        fr: "Vous ne l'aviez pas vu venir, avouez ! Pochettes d'ordinateur, portefeuilles. C'est très relaxant.",
         en: "You didn't see that one coming, admit it. Laptop sleeves, wallets — deeply relaxing.",
       } as Loc,
     },
@@ -546,8 +546,8 @@ export const profile = {
       icon: "🧗",
       label: { fr: "Escalade", en: "Climbing" } as Loc,
       detail: {
-        fr: "Un bon moyen de se dépasser, mais aussi de rencontrer des gens — le côté sociable est très présent.",
-        en: "A good way to push yourself, and to meet people — the social side matters as much as the wall.",
+        fr: "Un bon moyen de se dépasser, et de faire des rencontres !",
+        en: "A good way to push yourself, and meet people!",
       } as Loc,
     },
   ],
@@ -569,14 +569,14 @@ export const stationCopy = {
   home: {
     label: { fr: "Départ", en: "Start" } as Loc,
     quote: {
-      fr: "Salut ! Moi c'est Paul, Founding Designer chez Primary. Promène-toi sur l'île pour découvrir mes projets — je te raconte chacun d'eux au passage.",
-      en: "Hey! I'm Paul, Founding Designer at Primary. Walk around the island to discover my projects — I'll tell you about each one on the way.",
+      fr: "Salut ! Moi c'est Paul, Founding Designer. Promène-toi sur l'île pour découvrir mes projets — je te raconte chacun d'eux au passage.",
+      en: "Hey! I'm Paul, Founding Designer. Walk around the island to discover my projects — I'll tell you about each one on the way.",
     } as Loc,
   },
   about: {
     label: { fr: "Qui je suis", en: "About me" } as Loc,
     quote: {
-      fr: "Ça, c'est chez moi — enfin, une version low-poly. Psycho cognitive, STAPS, un bootcamp Rails : appuie sur E pour le parcours complet.",
+      fr: "Ça, c'est chez moi - enfin, une version low-poly. Psycho cognitive, STAPS, un bootcamp Rails : appuie sur E pour le parcours complet.",
       en: "That's my place — well, a low-poly version of it. Cognitive psychology, sport science, a Rails bootcamp: press E for the whole story.",
     } as Loc,
   },

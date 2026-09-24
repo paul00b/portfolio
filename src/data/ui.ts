@@ -9,8 +9,8 @@ export const ui = {
   // --- intro screen --------------------------------------------------------
   pressStart: { fr: "Appuie sur start", en: "Press start" },
   introPitch: {
-    fr: "Promène une version miniature de moi sur une île flottante pour découvrir mes projets. Tu préfères un bon vieux portfolio qui scrolle ? Passe en mode classique quand tu veux.",
-    en: "Walk a tiny version of me around a floating island to discover my projects. Prefer a good old scrolling portfolio? Switch to regular mode anytime.",
+    fr: "Bienvenue dans mon portfolio ! Changez de mode en selectionnant le mode classique, ou profitez de l'expérience par défaut ;)",
+    en: "Welcome to my portfolio! Switch modes by selecting regular mode, or just enjoy the default experience ;)",
   },
   move: { fr: "bouger", en: "move" },
   jump: { fr: "sauter", en: "jump" },
@@ -65,8 +65,8 @@ export const ui = {
     en: "Let's build something together.",
   },
   contactPitch: {
-    fr: "Je suis Founding Designer chez Primary et j'y suis très bien. Mais je réponds toujours à un bon échange sur le design santé, les design systems ou le design conversationnel.",
-    en: "I'm Founding Designer at Primary and happy there. But I always answer a good conversation about health design, design systems or conversational design.",
+    fr: "Je suis Founding Designer chez Primary - passionné de bidouillage et craft en tout genre, je me suis spécialisé en strucuration d'équipe et de process design",
+    en: "I'm Founding Designer at Primary — passionate about tinkering and craft of every kind, I've specialised in team structuring and design process.",
   },
   email: { fr: "Email", en: "Email" },
   based: { fr: "Basé à", en: "Based in" },
@@ -78,10 +78,10 @@ export const ui = {
   navExperience: { fr: "./parcours", en: "./experience" },
   navContact: { fr: "./contact", en: "./contact" },
 
-  heroTitleA: { fr: "Je conçois des produits de santé", en: "I design health products" },
+  heroTitleA: { fr: "Concevoir des produits", en: "Designing products" },
   heroTitleHighlight1: { fr: "utiles", en: "genuinely useful" },
   heroTitleB: { fr: "et", en: "and" },
-  heroTitleHighlight2: { fr: "dignes de confiance", en: "worth trusting" },
+  heroTitleHighlight2: { fr: "fun", en: "fun" },
   heroTitleC: { fr: ".", en: "." },
 
   seeWork: { fr: "Voir les projets ↓", en: "See the work ↓" },
@@ -99,7 +99,7 @@ export const ui = {
   },
   sectionAbout: { fr: "à propos", en: "about" },
   sectionAboutSub: {
-    fr: "Psycho cognitive, sport, puis du code. Un chemin bizarre qui explique bien ma façon de designer.",
+    fr: "Psycho cognitive, sport, puis du code. Un chemin un peu étrange, qui explique bien ma façon de designer.",
     en: "Cognitive psychology, sport, then code. An odd path that explains a lot about how I design.",
   },
   sectionExperience: { fr: "parcours", en: "experience" },
@@ -109,11 +109,11 @@ export const ui = {
   openProfile: { fr: "Ouvrir la fiche de perso →", en: "Open player profile →" },
   allLinks: { fr: "Tous les liens", en: "All the links" },
   contactHeadline: {
-    fr: "Parlons design santé, systèmes et IA.",
-    en: "Let's talk health design, systems and AI.",
+    fr: "Parlons design, IA, et de tout ce qui vous passe par la tête !",
+    en: "Let's talk design, AI, and whatever's on your mind!",
   },
   contactSub: {
-    fr: "Une question, un retour sur ce portfolio, ou juste un café du côté de Paris — ma boîte mail est ouverte.",
+    fr: "Une question, un retour sur ce portfolio ? ou juste un café du côté de Paris - ma boîte mail est ouverte.",
     en: "A question, feedback on this portfolio, or just a coffee around Paris — my inbox is open.",
   },
   switchToGame: { fr: "↳ passer en mode jeu", en: "↳ switch to game mode" },

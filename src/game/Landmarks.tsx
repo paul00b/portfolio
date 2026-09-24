@@ -1,19 +1,50 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import type { Group, Mesh } from "three";
-import { Mat } from "./Props";
+import { mat } from "./lowpoly";
+import { fx } from "./Effects";
+import { useActive } from "./active";
 import type { Landmark } from "../data/projects";
 
-/* Floating + slowly rotating wrapper used for the "hero" object of a landmark */
+/** Shared flat material, attached to the parent mesh. */
+const Mat = ({ color, ...rest }: { color: string; roughness?: number; metalness?: number; emissive?: string; emissiveIntensity?: number }) => (
+  <primitive object={mat(color, rest)} attach="material" />
+);
+
+/** Floating hero object: lifts, bobs harder and spins faster while you stand nearby. */
 function Hover({ children, y = 0, amp = 0.15, spin = true }: { children: React.ReactNode; y?: number; amp?: number; spin?: boolean }) {
   const ref = useRef<Group>(null);
-  useFrame(({ clock }) => {
+  const active = useActive();
+  const acc = useRef(Math.random() * 6);
+  useFrame(({ clock }, dt) => {
     if (!ref.current) return;
-    const t = clock.getElapsedTime();
-    ref.current.position.y = y + Math.sin(t * 1.5) * amp;
-    if (spin) ref.current.rotation.y = t * 0.6;
+    const k = active.current;
+    const t = clock.elapsedTime;
+    acc.current += Math.min(dt, 0.05) * (0.6 + k * 2.6);
+    ref.current.position.y = y + Math.sin(t * (1.5 + k)) * amp * (1 + k * 0.6) + k * 0.3;
+    if (spin) ref.current.rotation.y = acc.current;
+    else ref.current.rotation.z = Math.sin(t * 5) * 0.06 * k;
+    const sc = 1 + k * 0.12;
+    ref.current.scale.setScalar(sc);
   });
   return <group ref={ref}>{children}</group>;
+}
+
+/** Emits particles from a local point at a given rate. */
+function Emitter({ position, rate, kind, color }: { position: [number, number, number]; rate: number; kind: "smoke" | "sparkle"; color?: string }) {
+  const ref = useRef<Group>(null);
+  const v = useMemo(() => new THREE.Vector3(), []);
+  const active = useActive();
+  useFrame((_, dt) => {
+    if (!ref.current) return;
+    const r = rate * (1 + active.current * 1.5);
+    if (Math.random() > Math.min(dt, 0.05) * r) return;
+    ref.current.getWorldPosition(v);
+    if (kind === "smoke") fx.smoke(v.x, v.y, v.z);
+    else fx.sparkle(v.x + (Math.random() - 0.5) * 0.8, v.y + (Math.random() - 0.5) * 0.4, v.z + (Math.random() - 0.5) * 0.8, color);
+  });
+  return <group ref={ref} position={position} />;
 }
 
 /* ---------- BANK: a card-shaped building + floating coin ---------- */
@@ -41,6 +72,7 @@ function Bank() {
         <boxGeometry args={[2.4, 0.2, 0.6]} />
         <Mat color="#e4d4cf" />
       </mesh>
+      <Emitter position={[0, 3.1, 0]} rate={3} kind="sparkle" color="#ffe28a" />
       {/* Floating coin */}
       <group position={[0, 3.1, 0]}>
         <Hover amp={0.12}>
@@ -318,8 +350,15 @@ function System() {
 /* ---------- ROCKET: tiny planet + rocket ---------- */
 function Rocket() {
   const ring = useRef<Group>(null);
+  const flame = useRef<Mesh>(null);
+  const active = useActive();
   useFrame(({ clock }) => {
-    if (ring.current) ring.current.rotation.y = clock.getElapsedTime() * 0.8;
+    const t = clock.getElapsedTime();
+    if (ring.current) ring.current.rotation.y = t * 0.8;
+    if (flame.current) {
+      const f = 1 + Math.sin(t * 31) * 0.12 + Math.sin(t * 17) * 0.1 + active.current * 0.8;
+      flame.current.scale.set(1 + active.current * 0.3, f, 1 + active.current * 0.3);
+    }
   });
   return (
     <group>
@@ -360,7 +399,8 @@ function Rocket() {
           </mesh>
         ))}
         {/* flame */}
-        <mesh position={[0, -0.15, 0]} rotation={[Math.PI, 0, 0]}>
+        <Emitter position={[0, -0.35, 0]} rate={5} kind="smoke" />
+        <mesh ref={flame} position={[0, -0.15, 0]} rotation={[Math.PI, 0, 0]}>
           <coneGeometry args={[0.16, 0.35, 6]} />
           <meshStandardMaterial color="#f5c451" emissive="#ffb347" emissiveIntensity={1.2} flatShading />
         </mesh>
@@ -483,6 +523,18 @@ export function House() {
         <boxGeometry args={[0.25, 0.6, 0.25]} />
         <Mat color="#e4d4cf" />
       </mesh>
+      <Emitter position={[0.5, 2.85, -0.3]} rate={2.2} kind="smoke" />
+      {/* flower boxes */}
+      {[-0.55, 0.55].map((x) => (
+        <group key={x} position={[x, 0.93, 0.95]}>
+          {[-0.15, 0, 0.15].map((dx, i) => (
+            <mesh key={dx} position={[dx, 0.07, 0]}>
+              <icosahedronGeometry args={[0.07, 0]} />
+              <Mat color={["#ff7a6b", "#f5c451", "#ff9fc4"][i]} />
+            </mesh>
+          ))}
+        </group>
+      ))}
       {/* windows with balconies */}
       {[-0.55, 0.55].map((x) => (
         <group key={x}>
@@ -524,6 +576,7 @@ export function Mailbox() {
         <boxGeometry args={[0.02, 0.35, 0.6]} />
         <Mat color="#e0a929" />
       </mesh>
+      <MailFlag />
       {/* floating letter */}
       <group position={[0, 2.3, 0]}>
         <Hover amp={0.12}>
@@ -537,6 +590,28 @@ export function Mailbox() {
           </mesh>
         </Hover>
       </group>
+    </group>
+  );
+}
+
+function MailFlag() {
+  const ref = useRef<Group>(null);
+  const active = useActive();
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    const k = active.current;
+    ref.current.rotation.x = -Math.PI / 2 + k * (Math.PI / 2) + Math.sin(clock.elapsedTime * 8) * 0.08 * k;
+  });
+  return (
+    <group ref={ref} position={[-0.38, 1.1, -0.25]}>
+      <mesh position={[0, 0.25, 0]}>
+        <boxGeometry args={[0.03, 0.5, 0.03]} />
+        <Mat color="#3b3f57" />
+      </mesh>
+      <mesh position={[0, 0.42, 0.1]}>
+        <boxGeometry args={[0.03, 0.16, 0.2]} />
+        <Mat color="#ff6b5b" />
+      </mesh>
     </group>
   );
 }

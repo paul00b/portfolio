@@ -3,8 +3,11 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { controls, onJump } from "./useControls";
-import { obstacles, stations, WORLD_RADIUS, type Station } from "./stations";
-import { Mat } from "./Props";
+import { obstacles, stations, type Station } from "./stations";
+import { Character, type Motion } from "./Character";
+import { fx } from "./Effects";
+import { edgeRadius, FOUNTAIN_R, isWater, nav, player } from "./layout";
+import { treeColliders } from "./scatter";
 import { ui } from "../data/ui";
 import { tr, type Lang } from "../i18n/lang";
 
@@ -12,9 +15,11 @@ const CAM_OFFSET = new THREE.Vector3(18, 18, 18);
 const SCREEN_UP = new THREE.Vector3(-1, 0, -1).normalize();
 const SCREEN_RIGHT = new THREE.Vector3(1, 0, -1).normalize();
 
-const SPEED = 6.5;
-const GRAVITY = -32;
-const JUMP_V = 10.5;
+const SPEED = 6.2;
+const GRAVITY = -30;
+const JUMP_V = 10;
+
+const solids = [...obstacles, { x: 0, z: 0, r: FOUNTAIN_R + 0.05 }, ...treeColliders];
 
 interface PlayerProps {
   enabled: boolean;
@@ -29,6 +34,7 @@ function groundHeightAt(x: number, z: number) {
     if (s.kind === "home") continue;
     if (Math.hypot(x - s.position[0], z - s.position[1]) < 2.55) return 0.33;
   }
+  if (isWater(x, z)) return -0.11;
   return 0;
 }
 
@@ -51,12 +57,16 @@ function SpeechBubble({ station, lang }: { station: Station | null; lang: Lang }
   if (!station) return null;
   const showHint = station.kind !== "home";
   return (
-    <div className="animate-pop relative w-[240px] sm:w-[280px] select-none">
+    <div key={station.id} className="animate-pop relative w-[240px] select-none sm:w-[280px]">
       <div className="rounded-2xl border-2 border-ink bg-white px-4 py-3 shadow-hard">
-        <div className="mb-1 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-wider text-coral">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-coral" /> Paul
+        <div className="mb-1 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-wider" style={{ color: station.kind === "project" ? station.color : "#ff6b5b" }}>
+          <span className="relative inline-flex h-1.5 w-1.5">
+            <span className="absolute inset-0 animate-ping rounded-full bg-current opacity-60" />
+            <span className="relative inline-block h-1.5 w-1.5 rounded-full bg-current" />
+          </span>
+          Paul
         </div>
-        <p className="text-[13px] leading-snug text-ink font-medium">
+        <p className="text-[13px] font-medium leading-snug text-ink">
           {text}
           <span className="animate-blink ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 bg-ink" />
         </p>
@@ -67,166 +77,187 @@ function SpeechBubble({ station, lang }: { station: Station | null; lang: Lang }
           </div>
         )}
       </div>
-      {/* tail */}
-      <div className="absolute left-1/2 -bottom-[9px] h-4 w-4 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-ink bg-white" />
+      <div className="absolute -bottom-[9px] left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-ink bg-white" />
     </div>
   );
 }
 
 export function Player({ enabled, onNearChange, posRef, near, lang }: PlayerProps) {
   const group = useRef<THREE.Group>(null);
-  const body = useRef<THREE.Group>(null);
-  const shadow = useRef<THREE.Mesh>(null);
-  const footL = useRef<THREE.Mesh>(null);
-  const footR = useRef<THREE.Mesh>(null);
-  const eyes = useRef<THREE.Group>(null);
-  const antenna = useRef<THREE.Group>(null);
+  const motion = useRef<Motion>({ speed01: 0, grounded: true, vy: 0, turn: 0, landed: 0, waveT: 0, happy: false });
 
   const state = useRef({
     pos: new THREE.Vector3(0, 0, 3),
+    vel: new THREE.Vector3(),
     vy: 0,
     grounded: true,
-    facing: 0,
+    facing: Math.PI / 4,
     speed: 0,
-    squash: 1,
-    walkT: 0,
-    blinkT: 2,
     nearId: null as string | null,
     wantJump: false,
+    wasInWater: false,
+    zoom: 0,
+    stuckT: 0,
+    lastDist: Infinity,
+    helloT: 1.2,
   });
 
   const { camera, size } = useThree();
-  const camTarget = useMemo(() => new THREE.Vector3(), []);
-  const tmp = useMemo(() => new THREE.Vector3(), []);
+  const camTarget = useMemo(() => new THREE.Vector3(0, 0, 3), []);
+  const lookAhead = useMemo(() => new THREE.Vector3(), []);
+  const dir = useMemo(() => new THREE.Vector3(), []);
 
-  // Jump events (edge-triggered)
   useEffect(() => {
     return onJump(() => {
       if (enabled) state.current.wantJump = true;
     });
   }, [enabled]);
 
-  // Camera zoom responsive
   useEffect(() => {
-    const cam = camera as THREE.OrthographicCamera;
-    const z = THREE.MathUtils.clamp(Math.min(size.width, size.height) / 15, 22, 58);
-    cam.zoom = z;
-    cam.updateProjectionMatrix();
-  }, [camera, size]);
+    motion.current.happy = !!near;
+    if (near && near.kind !== "home") motion.current.waveT = 1.3;
+  }, [near]);
 
-  useFrame((_, dt) => {
+  useFrame(({ clock }, dt) => {
     const d = Math.min(dt, 0.05);
     const s = state.current;
+    const m = motion.current;
 
-    // --- input → direction
-    tmp.set(0, 0, 0);
+    // --- input → direction (keyboard wins over click-to-walk)
+    dir.set(0, 0, 0);
     if (enabled) {
-      if (controls.up) tmp.add(SCREEN_UP);
-      if (controls.down) tmp.sub(SCREEN_UP);
-      if (controls.right) tmp.add(SCREEN_RIGHT);
-      if (controls.left) tmp.sub(SCREEN_RIGHT);
+      if (controls.up) dir.add(SCREEN_UP);
+      if (controls.down) dir.sub(SCREEN_UP);
+      if (controls.right) dir.add(SCREEN_RIGHT);
+      if (controls.left) dir.sub(SCREEN_RIGHT);
     }
-    const moving = tmp.lengthSq() > 0;
-    if (moving) tmp.normalize();
+    if (dir.lengthSq() > 0) {
+      nav.active = false;
+    } else if (nav.active && enabled) {
+      const dx = nav.x - s.pos.x;
+      const dz = nav.z - s.pos.z;
+      const dist = Math.hypot(dx, dz);
+      const arrived = dist < 0.3 || (nav.stationId !== null && s.nearId === nav.stationId && dist < 2.6);
+      // give up if an obstacle keeps us from getting closer
+      s.stuckT = dist > s.lastDist - 0.002 ? s.stuckT + d : 0;
+      s.lastDist = dist;
+      if (arrived || s.stuckT > 0.4) {
+        nav.active = false;
+        s.stuckT = 0;
+        s.lastDist = Infinity;
+      } else dir.set(dx, 0, dz);
+    }
+    const moving = dir.lengthSq() > 0;
+    if (moving) dir.normalize();
 
-    // smooth speed
-    s.speed = THREE.MathUtils.lerp(s.speed, moving ? SPEED : 0, d * (moving ? 12 : 16));
+    const inWater = isWater(s.pos.x, s.pos.z) && s.pos.y < 0.1;
+    const top = SPEED * (inWater ? 0.62 : 1);
+    s.speed = THREE.MathUtils.lerp(s.speed, moving ? top : 0, d * (moving ? 10 : 14));
+    const prevFacing = s.facing;
     if (moving) {
-      const targetAngle = Math.atan2(tmp.x, tmp.z);
+      const targetAngle = Math.atan2(dir.x, dir.z);
       let diff = targetAngle - s.facing;
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-      s.facing += diff * Math.min(1, d * 14);
+      s.facing += diff * Math.min(1, d * 13);
     }
-    const dirX = Math.sin(s.facing);
-    const dirZ = Math.cos(s.facing);
-    s.pos.x += dirX * s.speed * d;
-    s.pos.z += dirZ * s.speed * d;
+    const turn = Math.atan2(Math.sin(s.facing - prevFacing), Math.cos(s.facing - prevFacing)) / Math.max(d, 1e-4);
+    const px = s.pos.x;
+    const pz = s.pos.z;
+    s.pos.x += Math.sin(s.facing) * s.speed * d;
+    s.pos.z += Math.cos(s.facing) * s.speed * d;
 
-    // --- obstacles
-    for (const o of obstacles) {
+    // --- solids
+    for (const o of solids) {
       const dx = s.pos.x - o.x;
       const dz = s.pos.z - o.z;
       const dist = Math.hypot(dx, dz);
-      const min = o.r + 0.45;
+      const min = o.r + 0.32;
       if (dist < min && dist > 0.0001) {
         s.pos.x = o.x + (dx / dist) * min;
         s.pos.z = o.z + (dz / dist) * min;
       }
     }
-    // --- world bounds
+    // --- island edge
     const r = Math.hypot(s.pos.x, s.pos.z);
-    const maxR = WORLD_RADIUS - 1.2;
+    const maxR = edgeRadius(Math.atan2(s.pos.z, s.pos.x)) - 1.1;
     if (r > maxR) {
       s.pos.x = (s.pos.x / r) * maxR;
       s.pos.z = (s.pos.z / r) * maxR;
     }
+    s.vel.set((s.pos.x - px) / Math.max(d, 1e-4), 0, (s.pos.z - pz) / Math.max(d, 1e-4));
 
     // --- vertical
     const ground = groundHeightAt(s.pos.x, s.pos.z);
     if (s.wantJump && s.grounded) {
       s.vy = JUMP_V;
       s.grounded = false;
-      s.squash = 1.35;
+      fx.dust(s.pos.x, s.pos.y, s.pos.z, 4);
+      if (inWater) fx.splash(s.pos.x, s.pos.y + 0.1, s.pos.z, 8);
     }
     s.wantJump = false;
     s.vy += GRAVITY * d;
     s.pos.y += s.vy * d;
     if (s.pos.y <= ground) {
-      if (!s.grounded && s.vy < -4) s.squash = 0.6; // landing squash
-      s.pos.y = ground;
+      if (!s.grounded && s.vy < -3) {
+        m.landed = -s.vy;
+        if (isWater(s.pos.x, s.pos.z)) fx.splash(s.pos.x, ground + 0.1, s.pos.z, 12);
+        else fx.land(s.pos.x, ground, s.pos.z);
+      }
+      // step up onto a platform / down into water without "falling"
+      if (s.grounded || s.pos.y > ground - 0.4) s.pos.y = ground;
       s.vy = 0;
       s.grounded = true;
     } else if (s.pos.y > ground + 0.02) {
-      s.grounded = false;
-    }
-    s.squash = THREE.MathUtils.lerp(s.squash, 1, d * 10);
-
-    // --- animation
-    s.walkT += d * s.speed * 2.2;
-    const bob = s.grounded ? Math.abs(Math.sin(s.walkT)) * 0.12 * (s.speed / SPEED) : 0;
-    if (group.current) {
-      group.current.position.set(s.pos.x, s.pos.y, s.pos.z);
-      group.current.rotation.y = s.facing;
-    }
-    if (body.current) {
-      body.current.position.y = 0.5 + bob;
-      const sq = s.squash;
-      body.current.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
-      body.current.rotation.x = THREE.MathUtils.lerp(body.current.rotation.x, (s.speed / SPEED) * 0.22, d * 8);
-    }
-    if (footL.current && footR.current) {
-      const sw = s.grounded ? Math.sin(s.walkT) * 0.22 * (s.speed / SPEED) : 0.15;
-      footL.current.position.z = sw;
-      footR.current.position.z = -sw;
-      footL.current.position.y = 0.08 + Math.max(0, Math.sin(s.walkT)) * 0.08 * (s.speed / SPEED);
-      footR.current.position.y = 0.08 + Math.max(0, -Math.sin(s.walkT)) * 0.08 * (s.speed / SPEED);
-    }
-    if (antenna.current) {
-      antenna.current.rotation.x = THREE.MathUtils.lerp(antenna.current.rotation.x, -(s.speed / SPEED) * 0.5 - s.vy * 0.03, d * 6);
-    }
-    // blink
-    s.blinkT -= d;
-    if (eyes.current) {
-      const closed = s.blinkT < 0.12 && s.blinkT > 0;
-      eyes.current.scale.y = THREE.MathUtils.lerp(eyes.current.scale.y, closed ? 0.1 : 1, d * 30);
-      if (s.blinkT <= 0) s.blinkT = 2.5 + Math.random() * 3;
-    }
-    if (shadow.current) {
-      const k = Math.max(0.35, 1 - (s.pos.y - ground) * 0.25);
-      shadow.current.scale.set(k, k, 1);
-      shadow.current.position.y = ground - s.pos.y + 0.02;
-      (shadow.current.material as THREE.MeshBasicMaterial).opacity = 0.22 * k;
+      if (s.grounded && s.pos.y - ground < 0.4 && s.vy <= 0) {
+        s.pos.y = THREE.MathUtils.lerp(s.pos.y, ground, d * 20);
+        s.vy = 0;
+      } else s.grounded = false;
     }
 
-    // --- camera follow
-    camTarget.lerp(s.pos, 1 - Math.pow(0.001, d));
-    camera.position.copy(camTarget).add(CAM_OFFSET);
-    camera.lookAt(camTarget);
+    // water entry
+    const wet = isWater(s.pos.x, s.pos.z) && s.grounded;
+    if (wet && !s.wasInWater) fx.splash(s.pos.x, 0.02, s.pos.z, 10);
+    s.wasInWater = wet;
 
-    // --- share position
+    // --- share state
+    player.x = s.pos.x;
+    player.y = s.pos.y;
+    player.z = s.pos.z;
+    player.speed = s.speed;
+    player.inWater = wet;
     posRef.current.x = s.pos.x;
     posRef.current.z = s.pos.z;
     posRef.current.angle = s.facing;
+
+    m.speed01 = s.speed / SPEED;
+    m.grounded = s.grounded;
+    m.vy = s.vy;
+    m.turn = turn;
+    if (s.helloT > 0) {
+      s.helloT -= d;
+      if (s.helloT <= 0 && s.speed < 0.5) m.waveT = 1.6;
+    }
+
+    if (group.current) {
+      group.current.position.copy(s.pos);
+      group.current.rotation.y = s.facing;
+    }
+
+    // --- camera: follow with a little look-ahead, zoom in near a station
+    lookAhead.copy(s.pos).addScaledVector(s.vel, 0.22);
+    lookAhead.y = 0;
+    camTarget.lerp(lookAhead, 1 - Math.pow(0.0025, d));
+    camera.position.copy(camTarget).add(CAM_OFFSET);
+    camera.lookAt(camTarget);
+    const cam = camera as THREE.OrthographicCamera;
+    const base = THREE.MathUtils.clamp(Math.min(size.width, size.height) / 11, 36, 66);
+    const want = base * (s.nearId && s.nearId !== "home" ? 1.1 : 1);
+    if (s.zoom === 0) s.zoom = base * 0.55;
+    s.zoom = THREE.MathUtils.lerp(s.zoom, want, 1 - Math.pow(clock.elapsedTime < 3 ? 0.25 : 0.12, d));
+    if (Math.abs(cam.zoom - s.zoom) > 0.001) {
+      cam.zoom = s.zoom;
+      cam.updateProjectionMatrix();
+    }
 
     // --- proximity
     let found: Station | null = null;
@@ -247,94 +278,8 @@ export function Player({ enabled, onNearChange, posRef, near, lang }: PlayerProp
 
   return (
     <group ref={group}>
-      {/* blob shadow */}
-      <mesh ref={shadow} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-        <circleGeometry args={[0.5, 16]} />
-        <meshBasicMaterial color="#1f2233" transparent opacity={0.22} />
-      </mesh>
-
-      {/* feet */}
-      <mesh ref={footL} castShadow position={[0.22, 0.08, 0]}>
-        <sphereGeometry args={[0.17, 8, 6]} />
-        <Mat color="#232946" />
-      </mesh>
-      <mesh ref={footR} castShadow position={[-0.22, 0.08, 0]}>
-        <sphereGeometry args={[0.17, 8, 6]} />
-        <Mat color="#232946" />
-      </mesh>
-
-      {/* body */}
-      <group ref={body} position={[0, 0.5, 0]}>
-        <mesh castShadow>
-          <icosahedronGeometry args={[0.52, 1]} />
-          <meshStandardMaterial color="#ff6b5b" flatShading roughness={0.6} />
-        </mesh>
-        {/* belly patch */}
-        <mesh position={[0, -0.1, 0.36]} scale={[1, 0.9, 0.5]}>
-          <icosahedronGeometry args={[0.28, 1]} />
-          <Mat color="#ffd9c2" />
-        </mesh>
-        {/* eyes */}
-        <group ref={eyes} position={[0, 0.12, 0.42]}>
-          {[-0.16, 0.16].map((x) => (
-            <group key={x} position={[x, 0, 0]}>
-              <mesh>
-                <sphereGeometry args={[0.11, 10, 10]} />
-                <meshStandardMaterial color="#ffffff" roughness={0.3} />
-              </mesh>
-              <mesh position={[0, 0, 0.08]}>
-                <sphereGeometry args={[0.055, 8, 8]} />
-                <meshStandardMaterial color="#1f2233" roughness={0.2} />
-              </mesh>
-              <mesh position={[0.025, 0.03, 0.12]}>
-                <sphereGeometry args={[0.02, 6, 6]} />
-                <meshBasicMaterial color="#ffffff" />
-              </mesh>
-            </group>
-          ))}
-        </group>
-        {/* blush */}
-        {[-0.3, 0.3].map((x) => (
-          <mesh key={x} position={[x, -0.02, 0.36]} scale={[1, 0.6, 0.3]}>
-            <sphereGeometry args={[0.08, 8, 8]} />
-            <meshStandardMaterial color="#ff9d8f" roughness={1} />
-          </mesh>
-        ))}
-        {/* tiny glasses (designer!) */}
-        <mesh position={[0, 0.12, 0.48]}>
-          <boxGeometry args={[0.1, 0.02, 0.02]} />
-          <Mat color="#232946" />
-        </mesh>
-        {[-0.16, 0.16].map((x) => (
-          <mesh key={x} position={[x, 0.12, 0.46]} rotation={[0, 0, 0]}>
-            <torusGeometry args={[0.135, 0.015, 6, 14]} />
-            <Mat color="#232946" />
-          </mesh>
-        ))}
-        {/* antenna */}
-        <group ref={antenna} position={[0, 0.45, 0]}>
-          <mesh position={[0, 0.15, 0]}>
-            <cylinderGeometry args={[0.02, 0.03, 0.3, 5]} />
-            <Mat color="#232946" />
-          </mesh>
-          <mesh castShadow position={[0, 0.34, 0]}>
-            <sphereGeometry args={[0.08, 8, 8]} />
-            <meshStandardMaterial color="#f5c451" emissive="#f5c451" emissiveIntensity={0.6} flatShading />
-          </mesh>
-        </group>
-        {/* scarf */}
-        <mesh position={[0, -0.28, 0]} rotation={[0.1, 0, 0]}>
-          <torusGeometry args={[0.42, 0.09, 6, 12]} />
-          <Mat color="#7fd8be" />
-        </mesh>
-        <mesh castShadow position={[0.28, -0.42, -0.25]} rotation={[0.3, 0, 0.4]}>
-          <boxGeometry args={[0.14, 0.3, 0.08]} />
-          <Mat color="#7fd8be" />
-        </mesh>
-      </group>
-
-      {/* speech bubble */}
-      <Html position={[0, 2.1, 0]} center zIndexRange={[50, 10]} style={{ pointerEvents: "none" }}>
+      <Character motion={motion} />
+      <Html position={[0, 2.05, 0]} center zIndexRange={[50, 10]} style={{ pointerEvents: "none" }}>
         <div className="flex flex-col items-center" style={{ transform: "translateY(-50%)" }}>
           <SpeechBubble station={near} lang={lang} />
         </div>

@@ -29,7 +29,11 @@ export const ui = {
     en: "paths lead to projects",
   },
   walkWith: { fr: "marche avec", en: "walk with" },
+  orClick: { fr: "ou clique sur le sol", en: "or click the ground" },
   map: { fr: "CARTE", en: "MAP" },
+  discovered: { fr: "Nouveau projet découvert", en: "New project discovered" },
+  allDiscovered: { fr: "Tous les projets découverts, bravo !", en: "Every project discovered, well done!" },
+  loadingWorld: { fr: "l'île se prépare", en: "building the island" },
 
   // --- speech bubble -------------------------------------------------------
   openProject: { fr: "ouvrir le projet", en: "open project" },
